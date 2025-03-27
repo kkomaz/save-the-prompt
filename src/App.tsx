@@ -89,13 +89,17 @@ function App() {
   const copyToClipboard = async (id: string, text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setPrompts(prompts.map(prompt => 
-        prompt.id === id ? { ...prompt, copied: true } : prompt
-      ));
+      setPrompts(
+        prompts.map((prompt) =>
+          prompt.id === id ? { ...prompt, copied: true } : prompt
+        )
+      );
       setTimeout(() => {
-        setPrompts(prompts.map(prompt =>
-          prompt.id === id ? { ...prompt, copied: false } : prompt
-        ));
+        setPrompts(
+          prompts.map((prompt) =>
+            prompt.id === id ? { ...prompt, copied: false } : prompt
+          )
+        );
       }, 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
@@ -103,14 +107,14 @@ function App() {
   };
 
   const filteredPrompts = selectedCategory
-    ? prompts.filter(prompt => prompt.category === selectedCategory)
+    ? prompts.filter((prompt) => prompt.category === selectedCategory)
     : prompts;
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20 pointer-events-none" />
-      
+
       <div className="relative">
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-orange-500 to-purple-500 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
@@ -118,56 +122,60 @@ function App() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <motion.header 
+        <motion.header
           className="mb-12 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center justify-center gap-4 mb-6">
-            <motion.img 
-              src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg" 
-              alt="heyAnon logo" 
+            <motion.img
+              src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
+              alt="heyAnon logo"
               className="w-16 h-16 rounded-full ring-2 ring-orange-500/50"
               whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300, damping: 10 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 10 }}
             />
             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-purple-500">
               Save The <span>Prompt</span>
             </h1>
           </div>
-          <p className="text-gray-400">Prompts by heyAnon</p>
+          <p className="text-gray-400">Prompts from heyAnon</p>
         </motion.header>
 
-        <motion.div 
+        <motion.div
           className="flex justify-center gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {['All', 'Staking/LSDs', 'Lending & Borrowing'].map((category, index) => (
-            <motion.button
-              key={category}
-              onClick={() => setSelectedCategory(category === 'All' ? null : category)}
-              className={cn(
-                "px-6 py-2 rounded-full transition-all relative overflow-hidden",
-                "before:absolute before:inset-0 before:transition-all before:duration-300",
-                category === (selectedCategory ?? 'All')
-                  ? "text-white before:bg-orange-500"
-                  : "text-gray-300 hover:text-white before:bg-gray-800 hover:before:bg-gray-700"
-              )}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <span className="relative z-10">{category}</span>
-            </motion.button>
-          ))}
+          {['All', 'Staking/LSDs', 'Lending & Borrowing'].map(
+            (category, index) => (
+              <motion.button
+                key={category}
+                onClick={() =>
+                  setSelectedCategory(category === 'All' ? null : category)
+                }
+                className={cn(
+                  'px-6 py-2 rounded-full transition-all relative overflow-hidden',
+                  'before:absolute before:inset-0 before:transition-all before:duration-300',
+                  category === (selectedCategory ?? 'All')
+                    ? 'text-white before:bg-orange-500'
+                    : 'text-gray-300 hover:text-white before:bg-gray-800 hover:before:bg-gray-700'
+                )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <span className="relative z-10">{category}</span>
+              </motion.button>
+            )
+          )}
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -183,7 +191,7 @@ function App() {
               whileHover={{ scale: 1.02 }}
             >
               <div className="flex justify-between items-start mb-4">
-                <motion.span 
+                <motion.span
                   className="px-3 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-sm rounded-full"
                   whileHover={{ scale: 1.05 }}
                 >
