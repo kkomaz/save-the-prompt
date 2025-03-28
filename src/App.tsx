@@ -103,6 +103,13 @@ function App() {
       text: 'HeyAnon, using Sanctum, please split 60% of my SOL across JupSOL, mSOL, and LST',
       copied: false,
     },
+    {
+      id: '13',
+      category: 'Swaps',
+      protocol: 'Solana',
+      text: 'Hey Anon, please consolidate all balances below $50 into USDC on Solana.',
+      copied: false,
+    },
   ]);
 
   useEffect(() => {
