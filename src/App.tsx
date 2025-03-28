@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Copy, CopyCheck, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Copy, CopyCheck, Filter, Heart, HeartOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { cn } from './utils';
@@ -14,6 +14,10 @@ type Prompt = {
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [prompts, setPrompts] = useState<Prompt[]>([
     {
       id: '1',
@@ -101,7 +105,16 @@ function App() {
     },
   ]);
 
-  const copyToClipboard = async (id: string, text: string) => {
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const copyToClipboard = async (
+    e: React.MouseEvent,
+    id: string,
+    text: string
+  ) => {
+    e.stopPropagation();
     try {
       await navigator.clipboard.writeText(text);
       setPrompts(
@@ -128,12 +141,32 @@ function App() {
     }
   };
 
-  const filteredPrompts = selectedCategory
-    ? prompts.filter((prompt) => prompt.category === selectedCategory)
-    : prompts;
+  const toggleFavorite = (id: string) => {
+    if (favorites.includes(id)) {
+      setFavorites(favorites.filter((favId) => favId !== id));
+      toast.success('Removed from favorites', {
+        position: 'bottom-center',
+        duration: 2000,
+      });
+    } else {
+      setFavorites([...favorites, id]);
+      toast.success('Added to favorites', {
+        position: 'bottom-center',
+        duration: 2000,
+      });
+    }
+  };
+
+  const filteredPrompts =
+    selectedCategory === 'Favorites'
+      ? prompts.filter((prompt) => favorites.includes(prompt.id))
+      : selectedCategory
+      ? prompts.filter((prompt) => prompt.category === selectedCategory)
+      : prompts;
 
   const categories = [
     'All',
+    'Favorites',
     'Staking/LSDs',
     'Lend & Borrow',
     'Trading',
@@ -177,7 +210,7 @@ function App() {
         </motion.header>
 
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-[600px] lg:max-w-none mx-auto"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-[600px] lg:max-w-none mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -217,8 +250,7 @@ function App() {
           {filteredPrompts.map((prompt, index) => (
             <motion.div
               key={prompt.id}
-              onClick={() => copyToClipboard(prompt.id, prompt.text)}
-              className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50 cursor-pointer"
+              className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -231,12 +263,38 @@ function App() {
                 >
                   {prompt.protocol}
                 </motion.span>
-                <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
-                  {prompt.copied ? (
-                    <CopyCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-                  ) : (
-                    <Copy className="w-5 h-5 sm:w-6 sm:h-6" />
-                  )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
+                    className="text-gray-400 hover:text-orange-500 transition-colors p-1"
+                    title="Copy prompt"
+                  >
+                    {prompt.copied ? (
+                      <CopyCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                    ) : (
+                      <Copy className="w-5 h-5 sm:w-6 sm:h-6" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => toggleFavorite(prompt.id)}
+                    className={cn(
+                      'transition-colors p-1',
+                      favorites.includes(prompt.id)
+                        ? 'text-red-500 hover:text-red-600'
+                        : 'text-gray-400 hover:text-red-500'
+                    )}
+                    title={
+                      favorites.includes(prompt.id)
+                        ? 'Remove from favorites'
+                        : 'Add to favorites'
+                    }
+                  >
+                    {favorites.includes(prompt.id) ? (
+                      <Heart className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+                    ) : (
+                      <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+                    )}
+                  </button>
                 </div>
               </div>
               <p className="text-base sm:text-lg mb-2 group-hover:text-orange-500/90 transition-colors">
