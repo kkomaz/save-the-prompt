@@ -49,7 +49,7 @@ function App() {
     },
     {
       id: '5',
-      category: 'Staking/LSDs',
+      category: 'Swaps',
       protocol: 'Sanctum',
       text: 'Swap 0.5 SOL for JupSOL using Sanctum',
       copied: false,
