@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Copy, CopyCheck, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast, Toaster } from 'sonner';
 import { cn } from './utils';
 
 type Prompt = {
   id: string;
-  category: 'Staking/LSDs' | 'Lending & Borrowing';
+  category: 'Staking/LSDs' | 'Lend & Borrow' | 'Trading' | 'Swaps';
   protocol: string;
   text: string;
   copied: boolean;
@@ -58,30 +59,44 @@ function App() {
     },
     {
       id: '7',
-      category: 'Lending & Borrowing',
+      category: 'Lend & Borrow',
       protocol: 'Aave',
       text: 'Supply 10 WETH to Aave on Arbitrum, then borrow 2000 USDC.',
       copied: false,
     },
     {
       id: '8',
-      category: 'Lending & Borrowing',
+      category: 'Lend & Borrow',
       protocol: 'Spark',
       text: 'Deposit 1 WETH to Spark on Ethereum, then borrow 10% of the deposit in DAI.',
       copied: false,
     },
     {
       id: '9',
-      category: 'Lending & Borrowing',
+      category: 'Lend & Borrow',
       protocol: 'Venus',
       text: 'Deposit 1 BNB on Venus, then borrow 200 USDT on BNB Network.',
       copied: false,
     },
     {
       id: '10',
-      category: 'Lending & Borrowing',
+      category: 'Lend & Borrow',
       protocol: 'Kamino',
       text: 'Deposit 10 SOL on Kamino, then borrow 1000 USDC on Solana.',
+      copied: false,
+    },
+    {
+      id: '11',
+      category: 'Trading',
+      protocol: 'PancakeSwap',
+      text: 'Swap 80% of my BNB to CAKE on BNB Chain and set a trailing stop loss at 20% of the current price of Cake',
+      copied: false,
+    },
+    {
+      id: '12',
+      category: 'Swaps',
+      protocol: 'Sanctum',
+      text: 'HeyAnon, using Sanctum, please split 60% of my SOL across JupSOL, mSOL, and LST',
       copied: false,
     },
   ]);
@@ -94,6 +109,10 @@ function App() {
           prompt.id === id ? { ...prompt, copied: true } : prompt
         )
       );
+      toast.success('Prompt copied to clipboard!', {
+        position: 'bottom-center',
+        duration: 2000,
+      });
       setTimeout(() => {
         setPrompts(
           prompts.map((prompt) =>
@@ -103,6 +122,9 @@ function App() {
       }, 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
+      toast.error('Failed to copy prompt', {
+        position: 'bottom-center',
+      });
     }
   };
 
@@ -110,8 +132,17 @@ function App() {
     ? prompts.filter((prompt) => prompt.category === selectedCategory)
     : prompts;
 
+  const categories = [
+    'All',
+    'Staking/LSDs',
+    'Lend & Borrow',
+    'Trading',
+    'Swaps',
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <Toaster theme="dark" />
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20 pointer-events-none" />
 
@@ -121,62 +152,64 @@ function App() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
         <motion.header
-          className="mb-12 text-center"
+          className="mb-8 sm:mb-12 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
             <motion.img
               src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
               alt="heyAnon logo"
-              className="w-16 h-16 rounded-full ring-2 ring-orange-500/50"
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full ring-2 ring-orange-500/50"
               whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 300, damping: 10 }}
             />
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-purple-500">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-purple-500">
               Save The <span>Prompt</span>
             </h1>
           </div>
-          <p className="text-gray-400">Prompts from heyAnon</p>
+          <p className="text-gray-400 text-sm sm:text-base">
+            Prompts from heyAnon
+          </p>
         </motion.header>
 
         <motion.div
-          className="flex justify-center gap-4 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-[600px] lg:max-w-none mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {['All', 'Staking/LSDs', 'Lending & Borrowing'].map(
-            (category, index) => (
-              <motion.button
-                key={category}
-                onClick={() =>
-                  setSelectedCategory(category === 'All' ? null : category)
-                }
-                className={cn(
-                  'px-6 py-2 rounded-full transition-all relative overflow-hidden',
-                  'before:absolute before:inset-0 before:transition-all before:duration-300',
-                  category === (selectedCategory ?? 'All')
-                    ? 'text-white before:bg-orange-500'
-                    : 'text-gray-300 hover:text-white before:bg-gray-800 hover:before:bg-gray-700'
-                )}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <span className="relative z-10">{category}</span>
-              </motion.button>
-            )
-          )}
+          {categories.map((category, index) => (
+            <motion.button
+              key={category}
+              onClick={() =>
+                setSelectedCategory(category === 'All' ? null : category)
+              }
+              className={cn(
+                'px-3 sm:px-6 py-1.5 sm:py-2 rounded-full transition-all relative overflow-hidden text-sm sm:text-base w-full',
+                'before:absolute before:inset-0 before:transition-all before:duration-300',
+                category === (selectedCategory ?? 'All')
+                  ? 'text-white before:bg-orange-500'
+                  : 'text-gray-300 hover:text-white before:bg-gray-800 hover:before:bg-gray-700'
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <span className="relative z-10 whitespace-nowrap">
+                {category}
+              </span>
+            </motion.button>
+          ))}
         </motion.div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -184,39 +217,36 @@ function App() {
           {filteredPrompts.map((prompt, index) => (
             <motion.div
               key={prompt.id}
-              className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50"
+              onClick={() => copyToClipboard(prompt.id, prompt.text)}
+              className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50 cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-3 sm:mb-4">
                 <motion.span
-                  className="px-3 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-sm rounded-full"
+                  className="px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full"
                   whileHover={{ scale: 1.05 }}
                 >
                   {prompt.protocol}
                 </motion.span>
-                <motion.button
-                  onClick={() => copyToClipboard(prompt.id, prompt.text)}
-                  className="text-gray-400 hover:text-orange-500 transition-colors"
-                  title="Copy prompt"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
+                <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
                   {prompt.copied ? (
-                    <CopyCheck className="w-6 h-6 text-green-500" />
+                    <CopyCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                   ) : (
-                    <Copy className="w-6 h-6" />
+                    <Copy className="w-5 h-5 sm:w-6 sm:h-6" />
                   )}
-                </motion.button>
+                </div>
               </div>
-              <p className="text-lg mb-2 group-hover:text-orange-500/90 transition-colors">
+              <p className="text-base sm:text-lg mb-2 group-hover:text-orange-500/90 transition-colors">
                 {prompt.text}
               </p>
-              <div className="flex items-center mt-4">
-                <Filter className="w-4 h-4 text-gray-500 mr-2" />
-                <span className="text-sm text-gray-500">{prompt.category}</span>
+              <div className="flex items-center mt-3 sm:mt-4">
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mr-2" />
+                <span className="text-xs sm:text-sm text-gray-500">
+                  {prompt.category}
+                </span>
               </div>
             </motion.div>
           ))}
