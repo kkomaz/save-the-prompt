@@ -6,7 +6,12 @@ import { cn } from './utils';
 
 type Prompt = {
   id: string;
-  category: 'Staking/LSDs' | 'Lend & Borrow' | 'Trading' | 'Swaps';
+  category:
+    | 'Staking/LSDs'
+    | 'Lend & Borrow'
+    | 'Trading'
+    | 'Swaps'
+    | 'Liquidity Pool';
   protocol: string;
   text: string;
   copied: boolean;
@@ -110,6 +115,41 @@ function App() {
       text: 'Hey Anon, please consolidate all balances below $50 into USDC on Solana.',
       copied: false,
     },
+    {
+      id: '14',
+      category: 'Trading',
+      protocol: 'Balancer',
+      text: 'Hey Anon, please take profit and close 30% of my ETH position at $2150 for USDC. Create an LP with the USDC profits for ETHUSDC on Balancer.',
+      copied: false,
+    },
+    {
+      id: '16',
+      category: 'Liquidity Pool',
+      protocol: 'Meteora',
+      text: 'Hey Anon, create an LP on Meteora with $5 of USDC and $5 of Solana.”',
+      copied: false,
+    },
+    {
+      id: '17',
+      category: 'Liquidity Pool',
+      protocol: 'Meteora',
+      text: 'Claim my rewards on Meteora and swap them all into Solana.',
+      copied: false,
+    },
+    {
+      id: '18',
+      category: 'Liquidity Pool',
+      protocol: 'All',
+      text: 'Sell all my ETH when ETH reaches an all time high.',
+      copied: false,
+    },
+    {
+      id: '19',
+      category: 'Trading',
+      protocol: 'All',
+      text: 'Buy 1000 USDT worth of Link on Ethereum when the price of Link reaches an all time low!',
+      copied: false,
+    },
   ]);
 
   useEffect(() => {
@@ -178,6 +218,7 @@ function App() {
     'Lend & Borrow',
     'Trading',
     'Swaps',
+    'Liquidity Pool',
   ];
 
   return (
