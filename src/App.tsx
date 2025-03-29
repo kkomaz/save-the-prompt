@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, CopyCheck, Filter, Heart, HeartOff } from 'lucide-react';
+import {
+  Copy,
+  CopyCheck,
+  Filter,
+  Heart,
+  Table2,
+  LayoutGrid,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { cn } from './utils';
@@ -11,7 +18,8 @@ type Prompt = {
     | 'Lend & Borrow'
     | 'Trading'
     | 'Swaps'
-    | 'Liquidity Pool';
+    | 'Liquidity Pool'
+    | 'Cross Chain';
   protocol: string;
   text: string;
   copied: boolean;
@@ -23,6 +31,7 @@ function App() {
     const saved = localStorage.getItem('favorites');
     return saved ? JSON.parse(saved) : [];
   });
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [prompts, setPrompts] = useState<Prompt[]>([
     {
       id: '1',
@@ -126,7 +135,7 @@ function App() {
       id: '16',
       category: 'Liquidity Pool',
       protocol: 'Meteora',
-      text: 'Hey Anon, create an LP on Meteora with $5 of USDC and $5 of Solana.”',
+      text: 'Hey Anon, create an LP on Meteora with $5 of USDC and $5 of Solana.',
       copied: false,
     },
     {
@@ -138,7 +147,7 @@ function App() {
     },
     {
       id: '18',
-      category: 'Liquidity Pool',
+      category: 'Trading',
       protocol: 'All',
       text: 'Sell all my ETH when ETH reaches an all time high.',
       copied: false,
@@ -148,6 +157,27 @@ function App() {
       category: 'Trading',
       protocol: 'All',
       text: 'Buy 1000 USDT worth of Link on Ethereum when the price of Link reaches an all time low!',
+      copied: false,
+    },
+    {
+      id: '20',
+      category: 'Cross Chain',
+      protocol: 'LayerZero',
+      text: 'Bridge 1000 USDC from ETH to Base',
+      copied: false,
+    },
+    {
+      id: '21',
+      category: 'Cross Chain',
+      protocol: 'deBridge',
+      text: 'Swap 500 USDC on Arbitrum to USDC on Solana using deBridge',
+      copied: false,
+    },
+    {
+      id: '22',
+      category: 'Cross Chain',
+      protocol: 'Magpie',
+      text: 'Swap 100 S on Sonic to UDST on Arbitrum using Magpie',
       copied: false,
     },
   ]);
@@ -211,6 +241,10 @@ function App() {
       ? prompts.filter((prompt) => prompt.category === selectedCategory)
       : prompts;
 
+  // Debugging log to verify the number of prompts
+  console.log('Filtered Prompts Length:', filteredPrompts.length);
+  console.log('Selected Category:', selectedCategory);
+
   const categories = [
     'All',
     'Favorites',
@@ -219,14 +253,13 @@ function App() {
     'Trading',
     'Swaps',
     'Liquidity Pool',
+    'Cross Chain',
   ];
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <Toaster theme="dark" />
-      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20 pointer-events-none" />
-
       <div className="relative">
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-orange-500 to-purple-500 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
@@ -289,74 +322,170 @@ function App() {
           ))}
         </motion.div>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          {filteredPrompts.map((prompt, index) => (
-            <motion.div
-              key={prompt.id}
-              className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <div className="flex justify-between items-start mb-3 sm:mb-4">
-                <motion.span
-                  className="px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  {prompt.protocol}
-                </motion.span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
-                    className="text-gray-400 hover:text-orange-500 transition-colors p-1"
-                    title="Copy prompt"
+        <div className="flex justify-end mb-4">
+          <motion.button
+            onClick={() => setViewMode('cards')}
+            className={cn(
+              'p-2 rounded-l-full bg-gray-800 hover:bg-gray-700',
+              viewMode === 'cards' && 'bg-orange-500 hover:bg-orange-600'
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <LayoutGrid className="w-6 h-6" />
+          </motion.button>
+          <motion.button
+            onClick={() => setViewMode('table')}
+            className={cn(
+              'p-2 rounded-r-full bg-gray-800 hover:bg-gray-700',
+              viewMode === 'table' && 'bg-orange-500 hover:bg-orange-600'
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Table2 className="w-6 h-6" />
+          </motion.button>
+        </div>
+
+        {viewMode === 'cards' ? (
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {filteredPrompts.map((prompt, index) => (
+              <motion.div
+                key={prompt.id}
+                className="group bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 hover:shadow-lg transition-all border border-gray-800/50 hover:border-orange-500/50"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+              >
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <motion.span
+                    className="px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full"
+                    whileHover={{ scale: 1.05 }}
                   >
-                    {prompt.copied ? (
-                      <CopyCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-                    ) : (
-                      <Copy className="w-5 h-5 sm:w-6 sm:h-6" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => toggleFavorite(prompt.id)}
-                    className={cn(
-                      'transition-colors p-1',
-                      favorites.includes(prompt.id)
-                        ? 'text-red-500 hover:text-red-600'
-                        : 'text-gray-400 hover:text-red-500'
-                    )}
-                    title={
-                      favorites.includes(prompt.id)
-                        ? 'Remove from favorites'
-                        : 'Add to favorites'
-                    }
-                  >
-                    {favorites.includes(prompt.id) ? (
-                      <Heart className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
-                    ) : (
-                      <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-                    )}
-                  </button>
+                    {prompt.protocol}
+                  </motion.span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) =>
+                        copyToClipboard(e, prompt.id, prompt.text)
+                      }
+                      className="text-gray-400 hover:text-orange-500 transition-colors p-1"
+                      title="Copy prompt"
+                    >
+                      {prompt.copied ? (
+                        <CopyCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                      ) : (
+                        <Copy className="w-5 h-5 sm:w-6 sm:h-6" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => toggleFavorite(prompt.id)}
+                      className={cn(
+                        'transition-colors p-1',
+                        favorites.includes(prompt.id)
+                          ? 'text-red-500 hover:text-red-600'
+                          : 'text-gray-400 hover:text-red-500'
+                      )}
+                      title={
+                        favorites.includes(prompt.id)
+                          ? 'Remove from favorites'
+                          : 'Add to favorites'
+                      }
+                    >
+                      {favorites.includes(prompt.id) ? (
+                        <Heart className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+                      ) : (
+                        <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <p className="text-base sm:text-lg mb-2 group-hover:text-orange-500/90 transition-colors">
-                {prompt.text}
-              </p>
-              <div className="flex items-center mt-3 sm:mt-4">
-                <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mr-2" />
-                <span className="text-xs sm:text-sm text-gray-500">
-                  {prompt.category}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+                <p className="text-base sm:text-lg mb-2 group-hover:text-orange-500/90 transition-colors">
+                  {prompt.text}
+                </p>
+                <div className="flex items-center mt-3 sm:mt-4">
+                  <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mr-2" />
+                  <span className="text-xs sm:text-sm text-gray-500">
+                    {prompt.category}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <table className="w-full text-left border-collapse bg-gray-900/50 rounded-lg overflow-hidden">
+              <thead>
+                <tr className="bg-gray-800/50">
+                  <th className="p-3 text-sm font-semibold">Protocol</th>
+                  <th className="p-3 text-sm font-semibold">Prompt</th>
+                  <th className="p-3 text-sm font-semibold">Category</th>
+                  <th className="p-3 text-sm font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPrompts.map((prompt, index) => (
+                  <motion.tr
+                    key={prompt.id}
+                    className="border-t border-gray-800/50 hover:bg-gray-800/30"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <td className="p-3">{prompt.protocol}</td>
+                    <td className="p-3">{prompt.text}</td>
+                    <td className="p-3">{prompt.category}</td>
+                    <td className="p-3 flex gap-2">
+                      <button
+                        onClick={(e) =>
+                          copyToClipboard(e, prompt.id, prompt.text)
+                        }
+                        className="text-gray-400 hover:text-orange-500 transition-colors"
+                        title="Copy prompt"
+                      >
+                        {prompt.copied ? (
+                          <CopyCheck className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <Copy className="w-5 h-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => toggleFavorite(prompt.id)}
+                        className={cn(
+                          'transition-colors',
+                          favorites.includes(prompt.id)
+                            ? 'text-red-500 hover:text-red-600'
+                            : 'text-gray-400 hover:text-red-500'
+                        )}
+                        title={
+                          favorites.includes(prompt.id)
+                            ? 'Remove from favorites'
+                            : 'Add to favorites'
+                        }
+                      >
+                        {favorites.includes(prompt.id) ? (
+                          <Heart className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Heart className="w-5 h-5" />
+                        )}
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
+        )}
       </div>
     </div>
   );
