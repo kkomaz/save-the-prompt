@@ -6,7 +6,8 @@ import {
   Heart,
   Table2,
   LayoutGrid,
-} from 'lucide-react';
+  ArrowUpDown,
+} from 'lucide-react'; // Added ArrowUpDown for sort icon
 import { motion } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { cn } from './utils';
@@ -32,6 +33,9 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [sortBy, setSortBy] = useState<'none' | 'category' | 'protocol'>(
+    'none'
+  ); // New state for sorting
   const [prompts, setPrompts] = useState<Prompt[]>([
     {
       id: '1',
@@ -148,14 +152,14 @@ function App() {
     {
       id: '18',
       category: 'Trading',
-      protocol: 'All',
+      protocol: 'Misc',
       text: 'Sell all my ETH when ETH reaches an all time high.',
       copied: false,
     },
     {
       id: '19',
       category: 'Trading',
-      protocol: 'All',
+      protocol: 'Misc',
       text: 'Buy 1000 USDT worth of Link on Ethereum when the price of Link reaches an all time low!',
       copied: false,
     },
@@ -234,16 +238,28 @@ function App() {
     }
   };
 
-  const filteredPrompts =
-    selectedCategory === 'Favorites'
-      ? prompts.filter((prompt) => favorites.includes(prompt.id))
-      : selectedCategory
-      ? prompts.filter((prompt) => prompt.category === selectedCategory)
-      : prompts;
+  const filteredPrompts = (() => {
+    let result = prompts;
 
-  // Debugging log to verify the number of prompts
-  console.log('Filtered Prompts Length:', filteredPrompts.length);
-  console.log('Selected Category:', selectedCategory);
+    if (selectedCategory === 'Favorites') {
+      result = prompts.filter((prompt) => favorites.includes(prompt.id));
+    } else if (selectedCategory) {
+      result = prompts.filter((prompt) => prompt.category === selectedCategory);
+    } else {
+      // When "All" is selected (selectedCategory is null), apply sorting
+      if (sortBy === 'category') {
+        result = [...prompts].sort((a, b) =>
+          a.category.localeCompare(b.category)
+        );
+      } else if (sortBy === 'protocol') {
+        result = [...prompts].sort((a, b) =>
+          a.protocol.localeCompare(b.protocol)
+        );
+      }
+    }
+
+    return result;
+  })();
 
   const categories = [
     'All',
@@ -322,29 +338,50 @@ function App() {
           ))}
         </motion.div>
 
-        <div className="flex justify-end mb-4">
-          <motion.button
-            onClick={() => setViewMode('cards')}
-            className={cn(
-              'p-2 rounded-l-full bg-gray-800 hover:bg-gray-700',
-              viewMode === 'cards' && 'bg-orange-500 hover:bg-orange-600'
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <LayoutGrid className="w-6 h-6" />
-          </motion.button>
-          <motion.button
-            onClick={() => setViewMode('table')}
-            className={cn(
-              'p-2 rounded-r-full bg-gray-800 hover:bg-gray-700',
-              viewMode === 'table' && 'bg-orange-500 hover:bg-orange-600'
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Table2 className="w-6 h-6" />
-          </motion.button>
+        {/* Sort and View Toggle Controls */}
+        <div className="flex justify-between items-center mb-4">
+          {/* Sort Dropdown (only visible when "All" is selected) */}
+          {selectedCategory === null && (
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as 'none' | 'category' | 'protocol')
+                }
+                className="appearance-none bg-gray-800 text-white py-2 pl-3 pr-8 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="none">No Sort</option>
+                <option value="category">Sort by Category</option>
+                <option value="protocol">Sort by Protocol</option>
+              </select>
+              <ArrowUpDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          )}
+          {/* View Toggle Buttons */}
+          <div className="flex ml-auto">
+            <motion.button
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'p-2 rounded-l-full bg-gray-800 hover:bg-gray-700',
+                viewMode === 'cards' && 'bg-orange-500 hover:bg-orange-600'
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <LayoutGrid className="w-6 h-6" />
+            </motion.button>
+            <motion.button
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'p-2 rounded-r-full bg-gray-800 hover:bg-gray-700',
+                viewMode === 'table' && 'bg-orange-500 hover:bg-orange-600'
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Table2 className="w-6 h-6" />
+            </motion.button>
+          </div>
         </div>
 
         {viewMode === 'cards' ? (
