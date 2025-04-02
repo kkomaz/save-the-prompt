@@ -573,7 +573,7 @@ export function PromptList() {
                   'backdrop-blur-sm rounded-lg p-4 sm:p-6',
                   prompt.fromHeyAnon
                     ? 'bg-slate-900/50 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-transparent hover:from-orange-500/30 hover:to-orange-500/10'
-                    : 'bg-gray-900/50 border-2 border-gray-600/50 hover:border-gray-500/50'
+                    : 'bg-gray-900/50 border-2 border-yellow-500/50 hover:border-yellow-400/50'
                 )}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
