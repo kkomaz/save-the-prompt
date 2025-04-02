@@ -1,4 +1,11 @@
-import { Routes, Route, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Toaster } from 'sonner';
 import { Auth } from './components/Auth';
@@ -10,7 +17,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from './utils/supabase';
 import { toast } from 'sonner';
 import { UserProvider, useUser } from './context/UserContext';
-import { MaintenanceProvider, useMaintenance } from './context/MaintenanceContext';
+import {
+  MaintenanceProvider,
+  useMaintenance,
+} from './context/MaintenanceContext';
 import { ProfileProvider } from './context/ProfileContext';
 
 function AppContent() {
@@ -56,7 +66,9 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      {showDisplayNameSetup && <SetupDisplayName onComplete={handleDisplayNameComplete} />}
+      {showDisplayNameSetup && (
+        <SetupDisplayName onComplete={handleDisplayNameComplete} />
+      )}
       <Toaster theme="dark" />
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20 pointer-events-none" />
       <div className="relative">
@@ -123,13 +135,13 @@ function AppContent() {
         </motion.header>
 
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               maintenanceMode ? (
                 <div className="flex flex-col items-center justify-center p-4">
                   <img
-                    src="https://i.imgur.com/5wJWHcX.jpeg"
+                    src="https://u.cubeupload.com/itskkoma/laptop.png"
                     alt="Maintenance Mode"
                     className="max-w-md w-full rounded-lg mb-6 shadow-xl"
                   />
@@ -137,17 +149,18 @@ function AppContent() {
                     Under Maintenance
                   </h1>
                   <p className="text-gray-400 text-center max-w-md">
-                    We're making some improvements to our system. We'll be back online shortly!
+                    We're making some improvements to our system. We'll be back
+                    online shortly!
                   </p>
                 </div>
               ) : (
                 <PromptList />
               )
-            } 
+            }
           />
-          <Route 
-            path="/login" 
-            element={user ? <Navigate to="/dashboard" replace /> : <Auth />} 
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/dashboard" replace /> : <Auth />}
           />
           <Route
             path="/dashboard"

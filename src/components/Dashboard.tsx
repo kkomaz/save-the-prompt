@@ -1,6 +1,25 @@
 import { useState, useEffect, Fragment, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Save, X, Loader2, Pencil, ChevronDown, Home, LayoutGrid, Table2, Heart, UserCircle, Wrench, Shield, Filter, Copy, CopyCheck, Ticket } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Save,
+  X,
+  Loader2,
+  Pencil,
+  ChevronDown,
+  Home,
+  LayoutGrid,
+  Table2,
+  Heart,
+  UserCircle,
+  Wrench,
+  Shield,
+  Filter,
+  Copy,
+  CopyCheck,
+  Ticket,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
 import { cn } from '../utils';
@@ -51,7 +70,7 @@ const sortOptions: SortOption[] = [
   { id: 'none', name: 'No Sort' },
   { id: 'category', name: 'Sort by Category' },
   { id: 'protocol', name: 'Sort by Protocol' },
-  { id: 'date', name: 'Sort by Date' }
+  { id: 'date', name: 'Sort by Date' },
 ];
 
 export function Dashboard() {
@@ -67,7 +86,9 @@ export function Dashboard() {
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [selectedSort, setSelectedSort] = useState<SortOption>(sortOptions[0]);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
-  const [activeView, setActiveView] = useState<'my-prompts' | 'favorites'>('my-prompts');
+  const [activeView, setActiveView] = useState<'my-prompts' | 'favorites'>(
+    'my-prompts'
+  );
   const [showInviteManager, setShowInviteManager] = useState(false);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
@@ -75,7 +96,7 @@ export function Dashboard() {
     category_id: '',
     protocol_id: '',
     text: '',
-    fromHeyAnon: false
+    fromHeyAnon: false,
   });
 
   const toggleMaintenanceMode = useCallback(() => {
@@ -83,7 +104,12 @@ export function Dashboard() {
   }, [maintenanceMode, setMaintenanceMode]);
 
   useEffect(() => {
-    Promise.all([fetchCategories(), fetchProtocols(), fetchPrompts(), fetchFavorites()]);
+    Promise.all([
+      fetchCategories(),
+      fetchProtocols(),
+      fetchPrompts(),
+      fetchFavorites(),
+    ]);
   }, []);
 
   useEffect(() => {
@@ -92,27 +118,39 @@ export function Dashboard() {
 
   const sortPrompts = () => {
     const sortedPrompts = [...prompts];
-    
+
     switch (selectedSort.id) {
       case 'category':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          a.categories.name.localeCompare(b.categories.name)
-        ));
+        setPrompts(
+          sortedPrompts.sort((a, b) =>
+            a.categories.name.localeCompare(b.categories.name)
+          )
+        );
         break;
       case 'protocol':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          a.protocols.name.localeCompare(b.protocols.name)
-        ));
+        setPrompts(
+          sortedPrompts.sort((a, b) =>
+            a.protocols.name.localeCompare(b.protocols.name)
+          )
+        );
         break;
       case 'date':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
+        setPrompts(
+          sortedPrompts.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+        );
         break;
       default:
-        setPrompts(sortedPrompts.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
+        setPrompts(
+          sortedPrompts.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+        );
     }
   };
 
@@ -120,22 +158,23 @@ export function Dashboard() {
     try {
       if (!user) return;
 
-      const code = Math.random().toString(36).substring(2, 15) + 
-                  Math.random().toString(36).substring(2, 15);
-      
+      const code =
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15);
+
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
 
-      const { error } = await supabase
-        .from('invites')
-        .insert([{
+      const { error } = await supabase.from('invites').insert([
+        {
           code,
           created_by: user.id,
-          expires_at: expiresAt.toISOString()
-        }]);
+          expires_at: expiresAt.toISOString(),
+        },
+      ]);
 
       if (error) throw error;
-      
+
       toast.success('Invite code generated successfully');
       fetchInvites();
     } catch (error) {
@@ -164,15 +203,12 @@ export function Dashboard() {
 
   const deleteInvite = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('invites')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('invites').delete().eq('id', id);
 
       if (error) throw error;
-      
+
       toast.success('Invite code deleted successfully');
-      setInvites(invites.filter(invite => invite.id !== id));
+      setInvites(invites.filter((invite) => invite.id !== id));
     } catch (error) {
       console.error('Error deleting invite:', error);
       toast.error('Error deleting invite');
@@ -188,9 +224,9 @@ export function Dashboard() {
 
       if (error) throw error;
       setCategories(categories || []);
-      
+
       if (categories && categories.length > 0) {
-        setNewPrompt(prev => ({ ...prev, category_id: categories[0].id }));
+        setNewPrompt((prev) => ({ ...prev, category_id: categories[0].id }));
       }
     } catch (error) {
       toast.error('Error fetching categories');
@@ -207,9 +243,9 @@ export function Dashboard() {
 
       if (error) throw error;
       setProtocols(protocols || []);
-      
+
       if (protocols && protocols.length > 0) {
-        setNewPrompt(prev => ({ ...prev, protocol_id: protocols[0].id }));
+        setNewPrompt((prev) => ({ ...prev, protocol_id: protocols[0].id }));
       }
     } catch (error) {
       toast.error('Error fetching protocols');
@@ -226,7 +262,8 @@ export function Dashboard() {
 
       const { data: userPrompts, error } = await supabase
         .from('prompts')
-        .select(`
+        .select(
+          `
           *,
           categories (
             id,
@@ -236,7 +273,8 @@ export function Dashboard() {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -264,7 +302,8 @@ export function Dashboard() {
       if (favoriteIds && favoriteIds.length > 0) {
         const { data: favoritePrompts, error: promptError } = await supabase
           .from('prompts')
-          .select(`
+          .select(
+            `
             *,
             categories (
               id,
@@ -274,8 +313,12 @@ export function Dashboard() {
               id,
               name
             )
-          `)
-          .in('id', favoriteIds.map(f => f.prompt_id));
+          `
+          )
+          .in(
+            'id',
+            favoriteIds.map((f) => f.prompt_id)
+          );
 
         if (promptError) throw promptError;
         setFavorites(favoritePrompts || []);
@@ -308,7 +351,7 @@ export function Dashboard() {
           text: newPrompt.text,
           user_id: user.id,
           display_name: displayName || 'Anonymous',
-          fromHeyAnon: newPrompt.fromHeyAnon
+          fromHeyAnon: newPrompt.fromHeyAnon,
         },
       ]);
 
@@ -316,11 +359,11 @@ export function Dashboard() {
 
       toast.success('Prompt created successfully');
       setIsCreating(false);
-      setNewPrompt({ 
-        category_id: categories[0]?.id || '', 
-        protocol_id: protocols[0]?.id || '', 
+      setNewPrompt({
+        category_id: categories[0]?.id || '',
+        protocol_id: protocols[0]?.id || '',
         text: '',
-        fromHeyAnon: false
+        fromHeyAnon: false,
       });
       fetchPrompts();
     } catch (error) {
@@ -345,7 +388,7 @@ export function Dashboard() {
           category_id: editingPrompt.category_id,
           protocol_id: editingPrompt.protocol_id,
           text: editingPrompt.text,
-          fromHeyAnon: editingPrompt.fromHeyAnon
+          fromHeyAnon: editingPrompt.fromHeyAnon,
         })
         .eq('id', editingPrompt.id)
         .eq('user_id', user.id);
@@ -384,18 +427,26 @@ export function Dashboard() {
     }
   }
 
-  const copyToClipboard = async (e: React.MouseEvent, id: string, text: string) => {
+  const copyToClipboard = async (
+    e: React.MouseEvent,
+    id: string,
+    text: string
+  ) => {
     e.stopPropagation();
     try {
       await navigator.clipboard.writeText(text);
-      setPrompts(prompts.map(prompt => 
-        prompt.id === id ? { ...prompt, copied: true } : prompt
-      ));
+      setPrompts(
+        prompts.map((prompt) =>
+          prompt.id === id ? { ...prompt, copied: true } : prompt
+        )
+      );
       toast.success('Copied to clipboard!');
       setTimeout(() => {
-        setPrompts(prompts.map(prompt => 
-          prompt.id === id ? { ...prompt, copied: false } : prompt
-        ));
+        setPrompts(
+          prompts.map((prompt) =>
+            prompt.id === id ? { ...prompt, copied: false } : prompt
+          )
+        );
       }, 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
@@ -403,10 +454,15 @@ export function Dashboard() {
     }
   };
 
-  const CustomDropdown = ({ value, onChange, options, label }: { 
-    value: string; 
-    onChange: (value: string) => void; 
-    options: { id: string; name: string; }[];
+  const CustomDropdown = ({
+    value,
+    onChange,
+    options,
+    label,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    options: { id: string; name: string }[];
     label: string;
   }) => (
     <Listbox value={value} onChange={onChange}>
@@ -416,7 +472,7 @@ export function Dashboard() {
         </Listbox.Label>
         <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
           <span className="block truncate">
-            {options.find(opt => opt.id === value)?.name}
+            {options.find((opt) => opt.id === value)?.name}
           </span>
           <span className="absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -441,7 +497,12 @@ export function Dashboard() {
                 }
               >
                 {({ selected }) => (
-                  <span className={cn('block truncate', selected && 'font-semibold')}>
+                  <span
+                    className={cn(
+                      'block truncate',
+                      selected && 'font-semibold'
+                    )}
+                  >
                     {option.name}
                   </span>
                 )}
@@ -466,7 +527,7 @@ export function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center p-4">
         <img
-          src="https://i.imgur.com/5wJWHcX.jpeg"
+          src="https://u.cubeupload.com/itskkoma/laptop.png"
           alt="Maintenance Mode"
           className="max-w-md w-full rounded-lg mb-6 shadow-xl"
         />
@@ -474,7 +535,8 @@ export function Dashboard() {
           Under Maintenance
         </h1>
         <p className="text-gray-400 text-center max-w-md">
-          We're making some improvements to our system. We'll be back online shortly!
+          We're making some improvements to our system. We'll be back online
+          shortly!
         </p>
       </div>
     );
@@ -486,10 +548,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-4">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link
               to="/"
               className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
@@ -522,7 +581,12 @@ export function Dashboard() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Heart className={cn('w-4 h-4', activeView === 'favorites' && 'fill-current')} />
+              <Heart
+                className={cn(
+                  'w-4 h-4',
+                  activeView === 'favorites' && 'fill-current'
+                )}
+              />
               Favorites
             </motion.button>
           </div>
@@ -552,7 +616,10 @@ export function Dashboard() {
                 <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
                   <span className="block truncate">{selectedSort.name}</span>
                   <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <ChevronDown
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                   </span>
                 </Listbox.Button>
                 <Transition
@@ -569,12 +636,19 @@ export function Dashboard() {
                         className={({ active }) =>
                           cn(
                             'relative cursor-pointer select-none py-2 px-4',
-                            active ? 'bg-orange-500 text-white' : 'text-gray-300'
+                            active
+                              ? 'bg-orange-500 text-white'
+                              : 'text-gray-300'
                           )
                         }
                       >
                         {({ selected }) => (
-                          <span className={cn('block truncate', selected && 'font-semibold')}>
+                          <span
+                            className={cn(
+                              'block truncate',
+                              selected && 'font-semibold'
+                            )}
+                          >
                             {option.name}
                           </span>
                         )}
@@ -691,7 +765,9 @@ export function Dashboard() {
                 <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
               </div>
             ) : invites.length === 0 ? (
-              <p className="text-center text-gray-400 py-4">No invite codes generated yet.</p>
+              <p className="text-center text-gray-400 py-4">
+                No invite codes generated yet.
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -718,7 +794,9 @@ export function Dashboard() {
                           {invite.expires_at ? (
                             new Date(invite.expires_at) > new Date() ? (
                               <span className="text-orange-500">
-                                {new Date(invite.expires_at).toLocaleDateString()}
+                                {new Date(
+                                  invite.expires_at
+                                ).toLocaleDateString()}
                               </span>
                             ) : (
                               <span className="text-red-500">Expired</span>
@@ -768,15 +846,25 @@ export function Dashboard() {
           <div className="space-y-4">
             <CustomDropdown
               value={newPrompt.category_id}
-              onChange={(value) => setNewPrompt({ ...newPrompt, category_id: value })}
-              options={categories.map(cat => ({ id: cat.id, name: cat.name }))}
+              onChange={(value) =>
+                setNewPrompt({ ...newPrompt, category_id: value })
+              }
+              options={categories.map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+              }))}
               label="Category"
             />
 
             <CustomDropdown
               value={newPrompt.protocol_id}
-              onChange={(value) => setNewPrompt({ ...newPrompt, protocol_id: value })}
-              options={protocols.map(prot => ({ id: prot.id, name: prot.name }))}
+              onChange={(value) =>
+                setNewPrompt({ ...newPrompt, protocol_id: value })
+              }
+              options={protocols.map((prot) => ({
+                id: prot.id,
+                name: prot.name,
+              }))}
               label="Protocol"
             />
 
@@ -800,7 +888,12 @@ export function Dashboard() {
                   type="checkbox"
                   id="fromHeyAnon"
                   checked={newPrompt.fromHeyAnon}
-                  onChange={(e) => setNewPrompt({ ...newPrompt, fromHeyAnon: e.target.checked })}
+                  onChange={(e) =>
+                    setNewPrompt({
+                      ...newPrompt,
+                      fromHeyAnon: e.target.checked,
+                    })
+                  }
                   className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
                 />
                 <label htmlFor="fromHeyAnon" className="text-sm text-gray-300">
@@ -855,15 +948,25 @@ export function Dashboard() {
           <div className="space-y-4">
             <CustomDropdown
               value={editingPrompt.category_id}
-              onChange={(value) => setEditingPrompt({ ...editingPrompt, category_id: value })}
-              options={categories.map(cat => ({ id: cat.id, name: cat.name }))}
+              onChange={(value) =>
+                setEditingPrompt({ ...editingPrompt, category_id: value })
+              }
+              options={categories.map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+              }))}
               label="Category"
             />
 
             <CustomDropdown
               value={editingPrompt.protocol_id}
-              onChange={(value) => setEditingPrompt({ ...editingPrompt, protocol_id: value })}
-              options={protocols.map(prot => ({ id: prot.id, name: prot.name }))}
+              onChange={(value) =>
+                setEditingPrompt({ ...editingPrompt, protocol_id: value })
+              }
+              options={protocols.map((prot) => ({
+                id: prot.id,
+                name: prot.name,
+              }))}
               label="Protocol"
             />
 
@@ -887,10 +990,18 @@ export function Dashboard() {
                   type="checkbox"
                   id="fromHeyAnon-edit"
                   checked={editingPrompt.fromHeyAnon}
-                  onChange={(e) => setEditingPrompt({ ...editingPrompt, fromHeyAnon: e.target.checked })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      fromHeyAnon: e.target.checked,
+                    })
+                  }
                   className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
                 />
-                <label htmlFor="fromHeyAnon-edit" className="text-sm text-gray-300">
+                <label
+                  htmlFor="fromHeyAnon-edit"
+                  className="text-sm text-gray-300"
+                >
                   Post as HeyAnon member
                 </label>
               </div>
@@ -949,43 +1060,47 @@ export function Dashboard() {
               <motion.div
                 key={prompt.id}
                 className={cn(
-                  "group transition-all h-full",
-                  "backdrop-blur-sm rounded-lg p-4 sm:p-6",
+                  'group transition-all h-full',
+                  'backdrop-blur-sm rounded-lg p-4 sm:p-6',
                   prompt.fromHeyAnon
-                    ? "bg-slate-900/50 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-transparent hover:from-orange-500/30 hover:to-orange-500/10"
-                    : "bg-gray-900/50 border border-gray-800/50 hover:border-gray-700/50"
+                    ? 'bg-slate-900/50 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-transparent hover:from-orange-500/30 hover:to-orange-500/10'
+                    : 'bg-gray-900/50 border border-gray-800/50 hover:border-gray-700/50'
                 )}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
-                  transition: { 
+                  transition: {
                     duration: 0.3,
-                    ease: "easeOut"
-                  }
+                    ease: 'easeOut',
+                  },
                 }}
               >
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <div className="flex flex-col gap-2">
-                    <span
-                      className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit"
-                    >
+                    <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
                       {prompt.protocols.name}
                     </span>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <UserCircle className="w-3 h-3" />
                       Created by{' '}
                       {prompt.fromHeyAnon ? (
-                        <span className="text-orange-500 font-medium">HeyAnon</span>
+                        <span className="text-orange-500 font-medium">
+                          HeyAnon
+                        </span>
                       ) : (
-                        <span className="text-purple-500 font-medium">{prompt.display_name}</span>
+                        <span className="text-purple-500 font-medium">
+                          {prompt.display_name}
+                        </span>
                       )}
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
+                      onClick={(e) =>
+                        copyToClipboard(e, prompt.id, prompt.text)
+                      }
                       className="text-gray-400 hover:text-orange-500 transition-colors p-1"
                       title="Copy prompt"
                     >
@@ -1056,10 +1171,10 @@ export function Dashboard() {
                   <motion.tr
                     key={prompt.id}
                     className={cn(
-                      "border-t hover:bg-gray-800/30",
+                      'border-t hover:bg-gray-800/30',
                       prompt.fromHeyAnon
-                        ? "border-orange-500/30 bg-orange-500/5"
-                        : "border-gray-800/50"
+                        ? 'border-orange-500/30 bg-orange-500/5'
+                        : 'border-gray-800/50'
                     )}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1074,9 +1189,13 @@ export function Dashboard() {
                       <UserCircle className="w-3 h-3" />
                       Created by{' '}
                       {prompt.fromHeyAnon ? (
-                        <span className="text-orange-500 font-medium">HeyAnon</span>
+                        <span className="text-orange-500 font-medium">
+                          HeyAnon
+                        </span>
                       ) : (
-                        <span className="text-purple-500 font-medium">{prompt.display_name}</span>
+                        <span className="text-purple-500 font-medium">
+                          {prompt.display_name}
+                        </span>
                       )}
                     </td>
                     <td className="p-3">{prompt.text}</td>
@@ -1084,7 +1203,9 @@ export function Dashboard() {
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
-                          onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
+                          onClick={(e) =>
+                            copyToClipboard(e, prompt.id, prompt.text)
+                          }
                           className="text-gray-400 hover:text-orange-500 transition-colors"
                           title="Copy prompt"
                         >
