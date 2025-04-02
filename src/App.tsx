@@ -28,7 +28,6 @@ function AppContent() {
   const { maintenanceMode } = useMaintenance();
   const [showDisplayNameSetup, setShowDisplayNameSetup] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     if (needsDisplayName) {
@@ -87,7 +86,7 @@ function AppContent() {
           <div className="flex flex-col items-center mb-6">
             <Link to="/" className="inline-flex items-center gap-3 mb-4">
               <motion.img
-                src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
+                src="https://u.cubeupload.com/itskkoma/stp.png"
                 alt="heyAnon logo"
                 className="w-12 h-12 sm:w-16 sm:h-16 rounded-full ring-2 ring-orange-500/50"
                 whileHover={{ scale: 1.05 }}
@@ -97,8 +96,15 @@ function AppContent() {
                 Save The <span>Prompt</span>
               </h1>
             </Link>
-            <p className="text-gray-400 text-sm sm:text-base">
-              Your AI prompt collection
+            <p className="text-gray-400 text-sm sm:text-base flex items-center gap-2">
+              Your AI prompt collection for HeyAnon{' '}
+              <span>
+                <img
+                  src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
+                  alt="heyAnon logo"
+                  className="w-6 h-6 mt-0.5"
+                />
+              </span>
             </p>
           </div>
 

@@ -59,7 +59,7 @@ const sortOptions: SortOption[] = [
   { id: 'none', name: 'No Sort' },
   { id: 'category', name: 'Sort by Category' },
   { id: 'protocol', name: 'Sort by Protocol' },
-  { id: 'date', name: 'Sort by Date' }
+  { id: 'date', name: 'Sort by Date' },
 ];
 
 const promptTypeOptions = [
@@ -87,7 +87,9 @@ export function PromptList() {
     });
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
 
@@ -106,27 +108,39 @@ export function PromptList() {
 
   const sortPrompts = () => {
     const sortedPrompts = [...prompts];
-    
+
     switch (selectedSort.id) {
       case 'category':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          a.categories.name.localeCompare(b.categories.name)
-        ));
+        setPrompts(
+          sortedPrompts.sort((a, b) =>
+            a.categories.name.localeCompare(b.categories.name)
+          )
+        );
         break;
       case 'protocol':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          a.protocols.name.localeCompare(b.protocols.name)
-        ));
+        setPrompts(
+          sortedPrompts.sort((a, b) =>
+            a.protocols.name.localeCompare(b.protocols.name)
+          )
+        );
         break;
       case 'date':
-        setPrompts(sortedPrompts.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
+        setPrompts(
+          sortedPrompts.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+        );
         break;
       default:
-        setPrompts(sortedPrompts.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
+        setPrompts(
+          sortedPrompts.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+        );
     }
   };
 
@@ -139,7 +153,7 @@ export function PromptList() {
           .eq('user_id', user.id);
 
         if (error) throw error;
-        setFavorites(data.map(fav => fav.prompt_id));
+        setFavorites(data.map((fav) => fav.prompt_id));
       } catch (error) {
         console.error('Error loading favorites:', error);
         toast.error('Error loading favorites');
@@ -175,7 +189,8 @@ export function PromptList() {
     try {
       const { data: prompts, error } = await supabase
         .from('prompts')
-        .select(`
+        .select(
+          `
           *,
           categories (
             id,
@@ -188,11 +203,14 @@ export function PromptList() {
           profile:user_id (
             is_anon_member
           )
-        `)
+        `
+        )
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPrompts((prompts || []).map(prompt => ({ ...prompt, copied: false })));
+      setPrompts(
+        (prompts || []).map((prompt) => ({ ...prompt, copied: false }))
+      );
     } catch (error) {
       toast.error('Error fetching prompts');
       console.error('Error:', error);
@@ -277,26 +295,29 @@ export function PromptList() {
 
     // Filter by prompt type
     if (promptType === 'official') {
-      result = result.filter(prompt => prompt.fromHeyAnon);
+      result = result.filter((prompt) => prompt.fromHeyAnon);
     } else if (promptType === 'community') {
-      result = result.filter(prompt => !prompt.fromHeyAnon);
+      result = result.filter((prompt) => !prompt.fromHeyAnon);
     }
 
     // Filter by category if selected
     if (selectedCategory === 'Favorites') {
       result = result.filter((prompt) => favorites.includes(prompt.id));
     } else if (selectedCategory) {
-      result = result.filter((prompt) => prompt.categories.name === selectedCategory);
+      result = result.filter(
+        (prompt) => prompt.categories.name === selectedCategory
+      );
     }
 
     // Filter by search term if present
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      result = result.filter((prompt) => 
-        prompt.text.toLowerCase().includes(term) ||
-        prompt.categories.name.toLowerCase().includes(term) ||
-        prompt.protocols.name.toLowerCase().includes(term) ||
-        prompt.display_name.toLowerCase().includes(term)
+      result = result.filter(
+        (prompt) =>
+          prompt.text.toLowerCase().includes(term) ||
+          prompt.categories.name.toLowerCase().includes(term) ||
+          prompt.protocols.name.toLowerCase().includes(term) ||
+          prompt.display_name.toLowerCase().includes(term)
       );
     }
 
@@ -311,7 +332,9 @@ export function PromptList() {
     );
   }
 
-  const selectedPromptType = promptTypeOptions.find(type => type.id === promptType);
+  const selectedPromptType = promptTypeOptions.find(
+    (type) => type.id === promptType
+  );
   const SelectedIcon = selectedPromptType?.icon;
 
   return (
@@ -341,7 +364,9 @@ export function PromptList() {
               <Listbox.Button className="relative w-full px-4 py-2.5 bg-gray-800 text-left rounded-xl border-2 border-orange-500/50 focus:outline-none focus:border-orange-500">
                 <span className="flex items-center gap-2">
                   {SelectedIcon && <SelectedIcon className="w-4 h-4" />}
-                  <span className="block truncate font-medium">{selectedPromptType?.name}</span>
+                  <span className="block truncate font-medium">
+                    {selectedPromptType?.name}
+                  </span>
                 </span>
                 <span className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronDown className="h-5 w-5 text-gray-400" />
@@ -368,7 +393,12 @@ export function PromptList() {
                       {({ selected }) => (
                         <span className="flex items-center gap-2">
                           <option.icon className="w-4 h-4" />
-                          <span className={cn('block truncate', selected && 'font-medium')}>
+                          <span
+                            className={cn(
+                              'block truncate',
+                              selected && 'font-medium'
+                            )}
+                          >
                             {option.name}
                           </span>
                         </span>
@@ -411,26 +441,30 @@ export function PromptList() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {['All', 'Favorites', ...categories.map(c => c.name)].map((category, index) => (
-              <motion.button
-                key={category}
-                onClick={() => setSelectedCategory(category === 'All' ? null : category)}
-                className={cn(
-                  'px-4 py-2 rounded-lg transition-all relative overflow-hidden text-sm',
-                  'border hover:border-gray-700',
-                  category === (selectedCategory ?? 'All')
-                    ? 'bg-gray-800 border-gray-700 text-white font-medium'
-                    : 'bg-gray-900/50 border-gray-800/50 text-gray-400 hover:text-white'
-                )}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <span className="relative z-10">{category}</span>
-              </motion.button>
-            ))}
+            {['All', 'Favorites', ...categories.map((c) => c.name)].map(
+              (category, index) => (
+                <motion.button
+                  key={category}
+                  onClick={() =>
+                    setSelectedCategory(category === 'All' ? null : category)
+                  }
+                  className={cn(
+                    'px-4 py-2 rounded-lg transition-all relative overflow-hidden text-sm',
+                    'border hover:border-gray-700',
+                    category === (selectedCategory ?? 'All')
+                      ? 'bg-gray-800 border-gray-700 text-white font-medium'
+                      : 'bg-gray-900/50 border-gray-800/50 text-gray-400 hover:text-white'
+                  )}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  <span className="relative z-10">{category}</span>
+                </motion.button>
+              )
+            )}
           </motion.div>
         </div>
       </motion.div>
@@ -442,7 +476,10 @@ export function PromptList() {
               <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
                 <span className="block truncate">{selectedSort.name}</span>
                 <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                  <ChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <ChevronDown
+                    className="h-5 w-5 text-gray-400"
+                    aria-hidden="true"
+                  />
                 </span>
               </Listbox.Button>
               <Transition
@@ -464,7 +501,12 @@ export function PromptList() {
                       }
                     >
                       {({ selected }) => (
-                        <span className={cn('block truncate', selected && 'font-semibold')}>
+                        <span
+                          className={cn(
+                            'block truncate',
+                            selected && 'font-semibold'
+                          )}
+                        >
                           {option.name}
                         </span>
                       )}
@@ -527,32 +569,30 @@ export function PromptList() {
               <motion.div
                 key={prompt.id}
                 className={cn(
-                  "group transition-all h-full",
-                  "backdrop-blur-sm rounded-lg p-4 sm:p-6",
+                  'group transition-all h-full',
+                  'backdrop-blur-sm rounded-lg p-4 sm:p-6',
                   prompt.fromHeyAnon
-                    ? "bg-slate-900/50 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-transparent hover:from-orange-500/30 hover:to-orange-500/10"
-                    : "bg-gray-900/50 border border-gray-800/50 hover:border-gray-700/50"
+                    ? 'bg-slate-900/50 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-transparent hover:from-orange-500/30 hover:to-orange-500/10'
+                    : 'bg-gray-900/50 border-2 border-gray-600/50 hover:border-gray-500/50'
                 )}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
-                  transition: { 
+                  transition: {
                     duration: 0.3,
-                    ease: "easeOut"
-                  }
+                    ease: 'easeOut',
+                  },
                 }}
               >
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <div className="flex flex-col gap-2">
-                    <span
-                      className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit"
-                    >
+                    <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
                       {prompt.protocols.name}
                     </span>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
-                      {(prompt.fromHeyAnon || prompt.profile?.is_anon_member) ? (
+                      {prompt.fromHeyAnon || prompt.profile?.is_anon_member ? (
                         <img
                           src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
                           alt="HeyAnon"
@@ -563,18 +603,27 @@ export function PromptList() {
                       )}
                       Created by{' '}
                       {prompt.fromHeyAnon ? (
-                        <span className="text-orange-500 font-medium">HeyAnon</span>
+                        <span className="text-orange-500 font-medium">
+                          HeyAnon
+                        </span>
                       ) : (
                         <span className="text-purple-500 font-medium">
                           {prompt.display_name}
-                          {prompt.profile?.is_anon_member && <span className="text-orange-400"> (team)</span>}
+                          {prompt.profile?.is_anon_member && (
+                            <span className="text-orange-400">
+                              {' '}
+                              (admin/team)
+                            </span>
+                          )}
                         </span>
                       )}
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
+                      onClick={(e) =>
+                        copyToClipboard(e, prompt.id, prompt.text)
+                      }
                       className="text-gray-400 hover:text-orange-500 transition-colors p-1"
                       title="Copy prompt"
                     >
@@ -647,10 +696,10 @@ export function PromptList() {
                   <motion.tr
                     key={prompt.id}
                     className={cn(
-                      "border-t hover:bg-gray-800/30",
+                      'border-t hover:bg-gray-800/30',
                       prompt.fromHeyAnon
-                        ? "border-orange-500/30 bg-orange-500/5"
-                        : "border-gray-800/50"
+                        ? 'border-orange-500/30 bg-orange-500/5'
+                        : 'border-gray-800/50'
                     )}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -662,7 +711,7 @@ export function PromptList() {
                       </span>
                     </td>
                     <td className="p-3 text-gray-400 flex items-center gap-1">
-                      {(prompt.fromHeyAnon || prompt.profile?.is_anon_member) ? (
+                      {prompt.fromHeyAnon || prompt.profile?.is_anon_member ? (
                         <img
                           src="https://pbs.twimg.com/profile_images/1894035469614104576/Gk3WK_Mm_400x400.jpg"
                           alt="HeyAnon"
@@ -673,11 +722,18 @@ export function PromptList() {
                       )}
                       Created by{' '}
                       {prompt.fromHeyAnon ? (
-                        <span className="text-orange-500 font-medium">HeyAnon</span>
+                        <span className="text-orange-500 font-medium">
+                          HeyAnon
+                        </span>
                       ) : (
                         <span className="text-purple-500 font-medium">
                           {prompt.display_name}
-                          {prompt.profile?.is_anon_member && <span className="text-orange-400"> (team)</span>}
+                          {prompt.profile?.is_anon_member && (
+                            <span className="text-orange-400">
+                              {' '}
+                              (admin/team)
+                            </span>
+                          )}
                         </span>
                       )}
                     </td>
@@ -686,7 +742,9 @@ export function PromptList() {
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
-                          onClick={(e) => copyToClipboard(e, prompt.id, prompt.text)}
+                          onClick={(e) =>
+                            copyToClipboard(e, prompt.id, prompt.text)
+                          }
                           className="text-gray-400 hover:text-orange-500 transition-colors"
                           title="Copy prompt"
                         >

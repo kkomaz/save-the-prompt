@@ -22,6 +22,8 @@ CREATE POLICY "Users can create their own prompts"
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+-- Drop the existing policy before recreating it to avoid conflicts
+DROP POLICY IF EXISTS "Users can update their own prompts" ON prompts;
 CREATE POLICY "Users can update their own prompts"
   ON prompts
   FOR UPDATE
@@ -31,3 +33,4 @@ CREATE POLICY "Users can update their own prompts"
 
 -- Remove fromheyanon column
 ALTER TABLE prompts DROP COLUMN IF EXISTS fromheyanon;
+

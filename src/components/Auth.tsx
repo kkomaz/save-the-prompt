@@ -34,7 +34,10 @@ export function Auth() {
         }
 
         // Create the user
-        const { data: { user }, error } = await supabase.auth.signUp({
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.signUp({
           email,
           password,
         });
@@ -88,7 +91,10 @@ export function Auth() {
 
       <form onSubmit={handleAuth} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
             Email
           </label>
           <input
@@ -102,7 +108,10 @@ export function Auth() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
             Password
           </label>
           <input
@@ -117,7 +126,10 @@ export function Auth() {
 
         {isSignUp && (
           <div>
-            <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-300 mb-1">
+            <label
+              htmlFor="inviteCode"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
               Invite Code
             </label>
             <input
@@ -163,7 +175,9 @@ export function Auth() {
           onClick={() => setIsSignUp(!isSignUp)}
           className="text-orange-500 hover:text-orange-400 text-sm"
         >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          {isSignUp
+            ? 'Already have an account? Sign in'
+            : "Don't have an account? Sign up"}
         </button>
       </div>
     </motion.div>
