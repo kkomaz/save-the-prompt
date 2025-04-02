@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, Loader2, AlertTriangle } from 'lucide-react';
+import { LogIn, UserPlus, Loader2, AlertTriangle, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../utils';
+import { Link } from 'react-router-dom';
 
 export function Auth() {
   const [email, setEmail] = useState('');
@@ -76,8 +77,19 @@ export function Auth() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md mx-auto p-6 space-y-6"
+      className="w-full max-w-md mx-auto p-6 space-y-6 relative"
     >
+      <div className="flex justify-center mb-4">
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Link
+            to="/"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-orange-500"
+          >
+            <Home className="w-5 h-5" />
+          </Link>
+        </motion.div>
+      </div>
+
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">
           {isSignUp ? 'Create an account' : 'Welcome back'}
