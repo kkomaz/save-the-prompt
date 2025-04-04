@@ -897,7 +897,7 @@ export function Dashboard() {
                   className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
                 />
                 <label htmlFor="fromHeyAnon" className="text-sm text-gray-300">
-                  Post as HeyAnon member
+                  Post as HeyAnon official account (orange border)
                 </label>
               </div>
             )}
@@ -1002,7 +1002,7 @@ export function Dashboard() {
                   htmlFor="fromHeyAnon-edit"
                   className="text-sm text-gray-300"
                 >
-                  Post as HeyAnon member
+                  Post as HeyAnon official account (orange border)
                 </label>
               </div>
             )}
