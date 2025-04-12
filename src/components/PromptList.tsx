@@ -580,7 +580,7 @@ export function PromptList() {
                     {selectedCrypto
                       ? cryptos.find((crypto) => crypto.id === selectedCrypto)
                           ?.name
-                      : 'Filter by Crypto'}
+                      : 'Filter by Chain'}
                   </span>
                   <span className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronDown
