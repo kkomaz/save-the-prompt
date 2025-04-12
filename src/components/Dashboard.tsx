@@ -39,6 +39,11 @@ type Protocol = {
   name: string;
 };
 
+type Crypto = {
+  id: string;
+  name: string;
+};
+
 type Prompt = {
   id: string;
   category_id: string;
@@ -49,6 +54,7 @@ type Prompt = {
   fromHeyAnon: boolean;
   categories: Category;
   protocols: Protocol;
+  cryptos: Crypto[]; // Changed to array to support multiple cryptos
   created_at: string;
   copied?: boolean;
 };
@@ -81,6 +87,7 @@ export function Dashboard() {
   const [favorites, setFavorites] = useState<Prompt[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [cryptos, setCryptos] = useState<Crypto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
@@ -95,6 +102,7 @@ export function Dashboard() {
   const [newPrompt, setNewPrompt] = useState({
     category_id: '',
     protocol_id: '',
+    crypto_ids: [] as string[], // Changed to array to support multiple cryptos
     text: '',
     fromHeyAnon: false,
   });
@@ -107,6 +115,7 @@ export function Dashboard() {
     Promise.all([
       fetchCategories(),
       fetchProtocols(),
+      fetchCryptos(),
       fetchPrompts(),
       fetchFavorites(),
     ]);
@@ -253,6 +262,21 @@ export function Dashboard() {
     }
   }
 
+  async function fetchCryptos() {
+    try {
+      const { data: cryptos, error } = await supabase
+        .from('cryptos')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCryptos(cryptos || []);
+    } catch (error) {
+      toast.error('Error fetching cryptos');
+      console.error('Error:', error);
+    }
+  }
+
   async function fetchPrompts() {
     try {
       if (!user) {
@@ -272,6 +296,12 @@ export function Dashboard() {
           protocols (
             id,
             name
+          ),
+          cryptos:prompt_cryptos (
+            crypto:cryptos (
+              id,
+              name
+            )
           )
         `
         )
@@ -279,7 +309,16 @@ export function Dashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPrompts(userPrompts || []);
+
+      // Transform the data to match the Prompt type
+      const transformedPrompts = (userPrompts || []).map((prompt) => ({
+        ...prompt,
+        cryptos: prompt.cryptos
+          .filter((pc: any) => pc.crypto !== null)
+          .map((pc: any) => pc.crypto),
+      }));
+
+      setPrompts(transformedPrompts);
     } catch (error) {
       toast.error('Error fetching prompts');
       console.error('Error:', error);
@@ -312,6 +351,12 @@ export function Dashboard() {
             protocols (
               id,
               name
+            ),
+            cryptos:prompt_cryptos (
+              crypto:cryptos (
+                id,
+                name
+              )
             )
           `
           )
@@ -321,7 +366,16 @@ export function Dashboard() {
           );
 
         if (promptError) throw promptError;
-        setFavorites(favoritePrompts || []);
+
+        // Transform the data to match the Prompt type
+        const transformedFavorites = (favoritePrompts || []).map((prompt) => ({
+          ...prompt,
+          cryptos: prompt.cryptos
+            .filter((pc: any) => pc.crypto !== null)
+            .map((pc: any) => pc.crypto),
+        }));
+
+        setFavorites(transformedFavorites);
       } else {
         setFavorites([]);
       }
@@ -344,24 +398,43 @@ export function Dashboard() {
         return;
       }
 
-      const { error } = await supabase.from('prompts').insert([
-        {
-          category_id: newPrompt.category_id,
-          protocol_id: newPrompt.protocol_id,
-          text: newPrompt.text,
-          user_id: user.id,
-          display_name: displayName || 'Anonymous',
-          fromHeyAnon: newPrompt.fromHeyAnon,
-        },
-      ]);
+      // Insert the prompt
+      const { data: promptData, error: promptError } = await supabase
+        .from('prompts')
+        .insert([
+          {
+            category_id: newPrompt.category_id,
+            protocol_id: newPrompt.protocol_id,
+            text: newPrompt.text,
+            user_id: user.id,
+            display_name: displayName || 'Anonymous',
+            fromHeyAnon: newPrompt.fromHeyAnon,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (promptError) throw promptError;
+
+      // Insert the crypto associations
+      if (newPrompt.crypto_ids.length > 0) {
+        const cryptoAssociations = newPrompt.crypto_ids.map((crypto_id) => ({
+          prompt_id: promptData.id,
+          crypto_id,
+        }));
+        const { error: cryptoError } = await supabase
+          .from('prompt_cryptos')
+          .insert(cryptoAssociations);
+
+        if (cryptoError) throw cryptoError;
+      }
 
       toast.success('Prompt created successfully');
       setIsCreating(false);
       setNewPrompt({
         category_id: categories[0]?.id || '',
         protocol_id: protocols[0]?.id || '',
+        crypto_ids: [],
         text: '',
         fromHeyAnon: false,
       });
@@ -382,7 +455,8 @@ export function Dashboard() {
         return;
       }
 
-      const { error } = await supabase
+      // Update the prompt
+      const { error: promptError } = await supabase
         .from('prompts')
         .update({
           category_id: editingPrompt.category_id,
@@ -393,7 +467,29 @@ export function Dashboard() {
         .eq('id', editingPrompt.id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (promptError) throw promptError;
+
+      // Update crypto associations
+      // First, delete existing associations
+      const { error: deleteError } = await supabase
+        .from('prompt_cryptos')
+        .delete()
+        .eq('prompt_id', editingPrompt.id);
+
+      if (deleteError) throw deleteError;
+
+      // Then, insert the new associations
+      if (editingPrompt.cryptos && editingPrompt.cryptos.length > 0) {
+        const cryptoAssociations = editingPrompt.cryptos.map((crypto) => ({
+          prompt_id: editingPrompt.id,
+          crypto_id: crypto.id,
+        }));
+        const { error: cryptoError } = await supabase
+          .from('prompt_cryptos')
+          .insert(cryptoAssociations);
+
+        if (cryptoError) throw cryptoError;
+      }
 
       toast.success('Prompt updated successfully');
       setEditingPrompt(null);
@@ -522,7 +618,6 @@ export function Dashboard() {
     );
   }
 
-  // Show maintenance mode page for non-admin users when maintenance is active
   if (maintenanceMode && !profile?.is_admin) {
     return (
       <div className="flex flex-col items-center justify-center p-4">
@@ -870,6 +965,41 @@ export function Dashboard() {
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
+                Cryptos
+              </label>
+              <div className="max-h-40 overflow-y-auto bg-gray-800 rounded-lg border border-gray-700 p-2">
+                {cryptos.map((crypto) => (
+                  <div key={crypto.id} className="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      id={`create-crypto-${crypto.id}`}
+                      checked={newPrompt.crypto_ids.includes(crypto.id)}
+                      onChange={(e) => {
+                        const updatedCryptoIds = e.target.checked
+                          ? [...newPrompt.crypto_ids, crypto.id]
+                          : newPrompt.crypto_ids.filter(
+                              (id) => id !== crypto.id
+                            );
+                        setNewPrompt({
+                          ...newPrompt,
+                          crypto_ids: updatedCryptoIds,
+                        });
+                      }}
+                      className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
+                    />
+                    <label
+                      htmlFor={`create-crypto-${crypto.id}`}
+                      className="text-sm text-gray-300"
+                    >
+                      {crypto.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Prompt Text
               </label>
               <textarea
@@ -969,6 +1099,45 @@ export function Dashboard() {
               }))}
               label="Protocol"
             />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Cryptos
+              </label>
+              <div className="max-h-40 overflow-y-auto bg-gray-800 rounded-lg border border-gray-700 p-2">
+                {cryptos.map((crypto) => (
+                  <div key={crypto.id} className="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      id={`edit-crypto-${crypto.id}`}
+                      checked={
+                        editingPrompt.cryptos?.some(
+                          (c) => c.id === crypto.id
+                        ) || false
+                      }
+                      onChange={(e) => {
+                        const updatedCryptos = e.target.checked
+                          ? [...(editingPrompt.cryptos || []), crypto]
+                          : (editingPrompt.cryptos || []).filter(
+                              (c) => c.id !== crypto.id
+                            );
+                        setEditingPrompt({
+                          ...editingPrompt,
+                          cryptos: updatedCryptos,
+                        });
+                      }}
+                      className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
+                    />
+                    <label
+                      htmlFor={`edit-crypto-${crypto.id}`}
+                      className="text-sm text-gray-300"
+                    >
+                      {crypto.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -1079,9 +1248,25 @@ export function Dashboard() {
               >
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <div className="flex flex-col gap-2">
-                    <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
-                      {prompt.protocols.name}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
+                        {prompt.protocols.name}
+                      </span>
+                      {prompt.cryptos && prompt.cryptos.length > 0 ? (
+                        prompt.cryptos.map((crypto) => (
+                          <span
+                            key={crypto.id}
+                            className="inline-flex px-2.5 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-xs sm:text-sm rounded-full w-fit"
+                          >
+                            {crypto.name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="inline-flex px-2.5 py-1 bg-gray-600 text-xs sm:text-sm rounded-full w-fit">
+                          None
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <UserCircle className="w-3 h-3" />
                       Created by{' '}
@@ -1154,13 +1339,14 @@ export function Dashboard() {
                 <th className="p-3 text-sm font-semibold">Creator</th>
                 <th className="p-3 text-sm font-semibold">Prompt</th>
                 <th className="p-3 text-sm font-semibold">Category</th>
+                <th className="p-3 text-sm font-semibold">Cryptos</th>
                 <th className="p-3 text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {displayedPrompts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-400">
+                  <td colSpan={6} className="text-center py-8 text-gray-400">
                     {activeView === 'my-prompts'
                       ? "You haven't created any prompts yet."
                       : "You haven't favorited any prompts yet."}
@@ -1200,6 +1386,22 @@ export function Dashboard() {
                     </td>
                     <td className="p-3">{prompt.text}</td>
                     <td className="p-3">{prompt.categories.name}</td>
+                    <td className="p-3">
+                      {prompt.cryptos && prompt.cryptos.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {prompt.cryptos.map((crypto) => (
+                            <span
+                              key={crypto.id}
+                              className="inline-flex px-2.5 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-xs rounded-full w-fit"
+                            >
+                              {crypto.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">None</span>
+                      )}
+                    </td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button

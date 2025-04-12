@@ -29,6 +29,11 @@ type Protocol = {
   name: string;
 };
 
+type Crypto = {
+  id: string;
+  name: string;
+};
+
 type Profile = {
   is_anon_member: boolean;
 };
@@ -43,6 +48,7 @@ type Prompt = {
   fromHeyAnon: boolean;
   categories: Category;
   protocols: Protocol;
+  cryptos: Crypto[]; // Changed to array to support multiple cryptos
   profile: Profile;
   created_at: string;
   copied: boolean;
@@ -71,6 +77,8 @@ const promptTypeOptions = [
 export function PromptList() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [cryptos, setCryptos] = useState<Crypto[]>([]);
+  const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -99,7 +107,12 @@ export function PromptList() {
   }, []);
 
   useEffect(() => {
-    Promise.all([fetchCategories(), fetchPrompts(), loadFavorites()]);
+    Promise.all([
+      fetchCategories(),
+      fetchCryptos(),
+      fetchPrompts(),
+      loadFavorites(),
+    ]);
   }, [user]);
 
   useEffect(() => {
@@ -185,6 +198,21 @@ export function PromptList() {
     }
   }
 
+  async function fetchCryptos() {
+    try {
+      const { data: cryptos, error } = await supabase
+        .from('cryptos')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCryptos(cryptos || []);
+    } catch (error) {
+      toast.error('Error fetching cryptos');
+      console.error('Error:', error);
+    }
+  }
+
   async function fetchPrompts() {
     try {
       const { data: prompts, error } = await supabase
@@ -200,6 +228,12 @@ export function PromptList() {
             id,
             name
           ),
+          cryptos:prompt_cryptos (
+            crypto:cryptos (
+              id,
+              name
+            )
+          ),
           profile:user_id (
             is_anon_member
           )
@@ -208,9 +242,17 @@ export function PromptList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPrompts(
-        (prompts || []).map((prompt) => ({ ...prompt, copied: false }))
-      );
+
+      // Transform the data to match the Prompt type
+      const transformedPrompts = (prompts || []).map((prompt) => ({
+        ...prompt,
+        cryptos: prompt.cryptos
+          .filter((pc: any) => pc.crypto !== null)
+          .map((pc: any) => pc.crypto),
+        copied: false,
+      }));
+
+      setPrompts(transformedPrompts);
     } catch (error) {
       toast.error('Error fetching prompts');
       console.error('Error:', error);
@@ -309,6 +351,13 @@ export function PromptList() {
       );
     }
 
+    // Filter by crypto if selected
+    if (selectedCrypto) {
+      result = result.filter((prompt) =>
+        prompt.cryptos.some((crypto) => crypto.id === selectedCrypto)
+      );
+    }
+
     // Filter by search term if present
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
@@ -317,7 +366,10 @@ export function PromptList() {
           prompt.text.toLowerCase().includes(term) ||
           prompt.categories.name.toLowerCase().includes(term) ||
           prompt.protocols.name.toLowerCase().includes(term) ||
-          prompt.display_name.toLowerCase().includes(term)
+          prompt.display_name.toLowerCase().includes(term) ||
+          prompt.cryptos.some((crypto) =>
+            crypto.name.toLowerCase().includes(term)
+          )
       );
     }
 
@@ -470,29 +522,83 @@ export function PromptList() {
       </motion.div>
 
       <div className="flex justify-between items-center mb-4 flex-col sm:flex-row gap-4 sm:gap-0">
-        <div className="w-full sm:w-48">
-          <Listbox value={selectedSort} onChange={setSelectedSort}>
-            <div className="relative">
-              <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
-                <span className="block truncate">{selectedSort.name}</span>
-                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                  <ChevronDown
-                    className="h-5 w-5 text-gray-400"
-                    aria-hidden="true"
-                  />
-                </span>
-              </Listbox.Button>
-              <Transition
-                as={Fragment}
-                leave="transition ease-in duration-100"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 rounded-lg border border-gray-700 shadow-lg max-h-60 overflow-auto focus:outline-none">
-                  {sortOptions.map((option) => (
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="w-full sm:w-48">
+            <Listbox value={selectedSort} onChange={setSelectedSort}>
+              <div className="relative">
+                <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
+                  <span className="block truncate">{selectedSort.name}</span>
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronDown
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 rounded-lg border border-gray-700 shadow-lg max-h-60 overflow-auto focus:outline-none">
+                    {sortOptions.map((option) => (
+                      <Listbox.Option
+                        key={option.id}
+                        value={option}
+                        className={({ active }) =>
+                          cn(
+                            'relative cursor-pointer select-none py-2 px-4',
+                            active
+                              ? 'bg-orange-500 text-white'
+                              : 'text-gray-300'
+                          )
+                        }
+                      >
+                        {({ selected }) => (
+                          <span
+                            className={cn(
+                              'block truncate',
+                              selected && 'font-semibold'
+                            )}
+                          >
+                            {option.name}
+                          </span>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+          </div>
+          <div className="w-full sm:w-48">
+            <Listbox value={selectedCrypto} onChange={setSelectedCrypto}>
+              <div className="relative">
+                <Listbox.Button className="relative w-full px-4 py-2 bg-gray-800 rounded-full border border-gray-700 focus:outline-none focus:border-orange-500 text-left">
+                  <span className="block truncate">
+                    {selectedCrypto
+                      ? cryptos.find((crypto) => crypto.id === selectedCrypto)
+                          ?.name
+                      : 'Filter by Crypto'}
+                  </span>
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronDown
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 rounded-lg border border-gray-700 shadow-lg max-h-60 overflow-auto focus:outline-none">
                     <Listbox.Option
-                      key={option.id}
-                      value={option}
+                      key="none"
+                      value={null}
                       className={({ active }) =>
                         cn(
                           'relative cursor-pointer select-none py-2 px-4',
@@ -507,15 +613,40 @@ export function PromptList() {
                             selected && 'font-semibold'
                           )}
                         >
-                          {option.name}
+                          All Cryptos
                         </span>
                       )}
                     </Listbox.Option>
-                  ))}
-                </Listbox.Options>
-              </Transition>
-            </div>
-          </Listbox>
+                    {cryptos.map((crypto) => (
+                      <Listbox.Option
+                        key={crypto.id}
+                        value={crypto.id}
+                        className={({ active }) =>
+                          cn(
+                            'relative cursor-pointer select-none py-2 px-4',
+                            active
+                              ? 'bg-orange-500 text-white'
+                              : 'text-gray-300'
+                          )
+                        }
+                      >
+                        {({ selected }) => (
+                          <span
+                            className={cn(
+                              'block truncate',
+                              selected && 'font-semibold'
+                            )}
+                          >
+                            {crypto.name}
+                          </span>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+          </div>
         </div>
         <div className="flex">
           <motion.button
@@ -588,9 +719,25 @@ export function PromptList() {
               >
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <div className="flex flex-col gap-2">
-                    <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
-                      {prompt.protocols.name}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex px-2.5 py-1 bg-gradient-to-r from-orange-500 to-purple-500 text-xs sm:text-sm rounded-full w-fit">
+                        {prompt.protocols.name}
+                      </span>
+                      {prompt.cryptos && prompt.cryptos.length > 0 ? (
+                        prompt.cryptos.map((crypto) => (
+                          <span
+                            key={crypto.id}
+                            className="inline-flex px-2.5 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-xs sm:text-sm rounded-full w-fit"
+                          >
+                            {crypto.name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="inline-flex px-2.5 py-1 bg-gray-600 text-xs sm:text-sm rounded-full w-fit">
+                          None
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       {prompt.fromHeyAnon || prompt.profile?.is_anon_member ? (
                         <img
@@ -601,7 +748,7 @@ export function PromptList() {
                       ) : (
                         <UserCircle className="w-3 h-3" />
                       )}
-                      Created by{' '}
+                      From{' '}
                       {prompt.fromHeyAnon ? (
                         <span className="text-orange-500 font-medium">
                           HeyAnon
@@ -677,13 +824,14 @@ export function PromptList() {
                 <th className="p-3 text-sm font-semibold">Creator</th>
                 <th className="p-3 text-sm font-semibold">Prompt</th>
                 <th className="p-3 text-sm font-semibold">Category</th>
+                <th className="p-3 text-sm font-semibold">Cryptos</th>
                 <th className="p-3 text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredPrompts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-400">
+                  <td colSpan={6} className="text-center py-8 text-gray-400">
                     {searchTerm
                       ? 'No prompts found matching your search criteria.'
                       : selectedCategory === 'Favorites'
@@ -720,7 +868,7 @@ export function PromptList() {
                       ) : (
                         <UserCircle className="w-3 h-3" />
                       )}
-                      Created by{' '}
+                      From{' '}
                       {prompt.fromHeyAnon ? (
                         <span className="text-orange-500 font-medium">
                           HeyAnon
@@ -739,6 +887,22 @@ export function PromptList() {
                     </td>
                     <td className="p-3">{prompt.text}</td>
                     <td className="p-3">{prompt.categories.name}</td>
+                    <td className="p-3">
+                      {prompt.cryptos && prompt.cryptos.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {prompt.cryptos.map((crypto) => (
+                            <span
+                              key={crypto.id}
+                              className="inline-flex px-2.5 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-xs rounded-full w-fit"
+                            >
+                              {crypto.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">None</span>
+                      )}
+                    </td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
